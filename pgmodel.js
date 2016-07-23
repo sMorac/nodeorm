@@ -1,22 +1,11 @@
 'use strict';
-var PgQuery = require('query/pgquery.js'); 
+var PgQuery = require(__base + 'models/query/pgquery.js'); 
 
 class PgModel{
-    constructor(tableName){
-        this.tableName = tableName; 
-    }
-    find(id, instanciation){
-        var dbQuery = new PgQuery('SELECT * FROM ' + this.tableName + ' WHERE id = $1;',[aId]);
+    static _find(tableName, id, instanciation){
+        var dbQuery = new PgQuery('SELECT * FROM ' + tableName + ' WHERE id = $1;',[id]);
         dbQuery.on('result', instanciation); 
-        dbQuery.perform();    
-    }
-    all(callback){
-        var dbQuery = new PgQuery('SELECT * FROM '+ this.tableName +' ORDER BY ID;',null);
-        dbQuery.on('result', callback); 
         dbQuery.perform();
-    }
-    initFromRow(row){
-	    for (var key in row) this[key] = row[key];
     }
     save(callback){
         var dbQuery,
@@ -30,24 +19,32 @@ class PgModel{
             inlineFields[1] += ', localtimestamp';
             dbQuery = new PgQuery('INSERT INTO '+this.tableName+' ('+inlineFields[0]+') VALUES('+inlineFields[1]+') RETURNING *;');
         }
-        dbQuery.on('result',aCallback);
+        dbQuery.on('result', callback);
         dbQuery.perform();
     }
     delete(callback){
         var dbQuery = new PgQuery('DELETE FROM '+this.tableName+' WHERE id = $1;',[this.id]);
-        dbQuery.on('result',aCallback);
+        dbQuery.on('result', callback);
         dbQuery.perform();
+    }
+    initFromRow(row){
+        if (row.length == 0) return console.error('no user matching');
+        if (row.length > 1) return console.error('multiple users matching');
+	    row = row[0];
+        for (var key in row) this[key] = row[key];
     }
     inlineFields(){
         var result = [], 
             keys = '', 
             values = ''; 
         for(let key in this){
-            if((this[key] != null)&&(this[key].constructor.name == 'Function')) continue;
-            if((key=='id')|| (key=='updated_at') || (key=='created_at')) continue;
-            keys += key+', '
-            if((this[key] != null)&&(this[key].constructor.name == 'String'))
+            if((this[key] != null) && (this[key].constructor.name == 'Function')) continue;
+            if((key=='id') || (key=='tableName') || (key=='updated_at') || (key=='created_at')) continue;
+            keys += key+', ';
+            if((this[key] != null) && (this[key].constructor.name == 'String'))
                 values += '\''+this[key]+'\', ';
+            else if((this[key] != null) && (this[key].constructor.name == 'Object'))
+                values += '\''+JSON.stringify(this[key])+'\', ';
             else
                 values += this[key]+', ';
         }

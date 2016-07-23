@@ -3,18 +3,10 @@
 var MysqlQuery = require('query/mysqlquery.js'); 
 
 class MysqlModel{
-    constructor(tableName){
-        this.tableName = tableName;
-    }
-    find(id, instanciation){
-        let dbQuery = new MysqlQuery('SELECT * FROM ?? WHERE id = ?',[this.tableName,id]);
+    static find(tableName, id, instanciation){
+        let dbQuery = new MysqlQuery('SELECT * FROM ?? WHERE id = ?',[tableName, id]);
         dbQuery.on('result', instanciation);
         dbQuery.perform();   
-    }
-    all(callback){
-        let dbQuery = new MysqlQuery('SELECT * FROM ??;',this.tableName);
-        dbQuery.on('result', callback);
-        dbQuery.perform();
     }
     initFromRow(row){
 	    for (var key in row) this[key] = row[key];

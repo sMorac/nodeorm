@@ -1,33 +1,26 @@
 'use strict';
 
-var EventSystem = require('utils/eventsystem.js');
+var EventSystem = require(__base + 'utils/eventsystem.js');
 
 class PgQuery extends EventSystem{
     constructor(queryString, values){
+        super();
         this.queryString = queryString;
         this.values = values;
-        this.release = null;
-        this.client = null; 
         // bindings
-        this.onConnect = this.onConnect.bind(this); 
         this.onResult = this.onResult.bind(this); 
     }
     perform(){
-        PgQuery.pool.connect(PgQuery.config, this.onConnect); 
-    }
-    onConnect(err, client, done){
-        this.release = done; 
-        if(err) return this.onError(err);
-        this.client = client; 
-        this.client = query(this.queryString, this.values, this.onResult); 
+        PgQuery.pool.query(this.queryString, this.values, this.onResult);
     }
     onResult(err, result){
-        this.release(); 
         if(err) return this.onError(err); 
         this.emit('result', result.rows);
     }
     onError(err){
         console.error('[Error]: ', err);
+        console.error('[Error]: query: '+this.queryString); 
+        console.error('[Error]: values: '+this.values); 
     }
 }
 
