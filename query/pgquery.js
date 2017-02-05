@@ -24,15 +24,18 @@ class PgQuery extends EventSystem{
     }
 }
 
-if(!process.env.PG_PASSWORD) throw "Password not found in environment variable PG_PASSWORD";
+if(!process.env.NODE_ENV) throw "Environment variable NODE_ENV not set!";
 
-PgQuery.pool = require('pg').native;
-PgQuery.config = {
-    user: 'user',
-    password: process.env.PG_PASSWORD, // Storing the password as environment variable
+var config = require(__base + 'config.js');
+
+var Pool = require('pg').Pool;
+PgQuery.pool = new Pool(__config.db[process.env.NODE_ENV], require('pg-native'));
+/*    {
+    user: 'ce_user',
+    password: 'ce_access_local', // Storing the password as environment variable
     database: 'db',
     host: 'host',
     port: 5432,
-}
+} */
 
 module.exports = PgQuery;
