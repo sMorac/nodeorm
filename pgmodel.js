@@ -1,4 +1,7 @@
 'use strict';
+/*jshint esversion: 6 */
+/*jshint node: true */
+/* globals __base */
 var PgQuery = require(__base + 'models/query/pgquery.js'); 
 
 class PgModel{
@@ -13,7 +16,7 @@ class PgModel{
         inlineFields[0] += ', updated_at';
         inlineFields[1] += ', localtimestamp';
         if(this.id)
-            dbQuery = new PgQuery('UPDATE '+this.tableName+' SET ('+inlineFields[0]+') = ('+inlineFields[1]+') WHERE id = '+this.id+';'); 
+            dbQuery = new PgQuery('UPDATE '+this.tableName+' SET ('+inlineFields[0]+') = ('+inlineFields[1]+') WHERE id = '+this.id+' RETURNING *;'); 
         else{
             inlineFields[0] += ', created_at';
             inlineFields[1] += ', localtimestamp';
@@ -28,7 +31,7 @@ class PgModel{
         dbQuery.perform();
     }
     initFromRow(row){
-        if (row.length == 0) return console.error('no user matching');
+        if (row.length === 0) return console.error('no user matching');
         if (row.length > 1) return console.error('multiple users matching');
 	    row = row[0];
         for (var key in row) this[key] = row[key];
@@ -36,15 +39,17 @@ class PgModel{
     inlineFields(){
         var result = [], 
             keys = '', 
-            values = ''; 
-        for(let key in this){
-            if((this[key] != null) && (this[key].constructor.name == 'Function')) continue;
-            if((key=='id') || (key=='tableName') || (key=='updated_at') || (key=='created_at')) continue;
+            values = '';
+        var safe_keys = new Set(['id','tableName', 'updated_at', 'created_at']);
+        for(var key in this){
+            if((this[key]) && (this[key].constructor.name == 'Function')) continue;
+            if(safe_keys.has(key)) continue;
             keys += key+', ';
-            if((this[key] != null) && (this[key].constructor.name == 'String'))
+            if(this[key] && (this[key].constructor.name == 'String'))
+            
                 values += '\''+this[key]+'\', ';
-            else if((this[key] != null) && (this[key].constructor.name == 'Object'))
-                values += '\''+JSON.stringify(this[key])+'\', ';
+            else if((this[key]) && (this[key].constructor.name == 'Object'))
+                values += '$$'+JSON.stringify(this[key])+'$$, ';
             else
                 values += this[key]+', ';
         }
@@ -53,7 +58,7 @@ class PgModel{
         result[0] = keys;
         result[1] = values;
         return result; 
-    }
+    }  
 }
 
 module.exports = PgModel;
