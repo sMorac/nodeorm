@@ -1,2 +1,4 @@
 # nodeorm
-Simple orm for Pg and Mysql for Node.js
+Simple ORM for PGSQL for Node.js
+
+
