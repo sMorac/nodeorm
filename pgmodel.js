@@ -76,33 +76,3 @@ PgModel.tableName = '<dummy>';
 PgModel.safe_keys = new Set(['id','tableName', 'updated_at', 'created_at']);
 
 module.exports = PgModel;
-
-    inlineFields(){
-        var result = [], 
-            keys = '', 
-            values = '';
-        var safe_keys = this.constructor.safe_keys;
-        console.log(safe_keys)
-        for(var key in this){
-            if((this[key]) && (this[key].constructor.name == 'Function')) continue;
-            if(safe_keys.has(key)) continue;
-            keys += key+', ';
-            if(this[key] && (this[key].constructor.name == 'String'))
-            
-                values += '\''+this[key]+'\', ';
-            else if((this[key]) && (this[key].constructor.name == 'Object'))
-                values += '$$'+JSON.stringify(this[key])+'$$, ';
-            else
-                values += this[key]+', ';
-        }
-        keys = keys.substring(0,(keys.length -2));
-        values = values.substring(0, (values.length-2));    
-        result[0] = keys;
-        result[1] = values;
-        return result; 
-    }  
-}
-PgModel.tableName = '<dummy>';
-PgModel.safe_keys = new Set(['id','tableName', 'updated_at', 'created_at']);
-
-module.exports = PgModel;
