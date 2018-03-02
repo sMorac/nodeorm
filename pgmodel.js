@@ -1,9 +1,11 @@
 'use strict';
+
 /*jshint esversion: 6 */
 /*jshint node: true */
 /* globals __dbpool */
 
 class PgModel{
+
     static makeFromRow(result){
         return new Promise( (resolve, reject) => {
             var res = null;
@@ -22,11 +24,13 @@ class PgModel{
                 resolve(models); 
             });
     }
+    
     static find(id){
         return __dbpool.query('SELECT * FROM ' + this.tableName + ' WHERE id = $1;',[id]) 
             .then(this.makeFromRow.bind(this))
             .catch( (e) => { console.error(e); }); 
     }
+    
     save(){
         var query,
             inlineFields = this.inlineFields();
@@ -43,11 +47,13 @@ class PgModel{
             .then(this.constructor.makeFromRow.bind(this.constructor))
             .catch( (e) => { console.error(e); }); 
     }
+    
     delete(callback){
         return __dbpool.query('DELETE FROM '+this.constructor.tableName+' WHERE id = $1;',[this.id])
             .then(this.constructor.makeFromRow.bind(this.constructor))
             .catch( (e) => { console.error(e); });
     }
+    
     inlineFields(){
         var result = [], 
             keys = '', 
@@ -71,7 +77,9 @@ class PgModel{
         return result; 
     }  
 }
+
 PgModel.tableName = '<dummy>';
+
 PgModel.safe_keys = new Set(['id','tableName', 'updated_at', 'created_at']);
 
 module.exports = PgModel;
