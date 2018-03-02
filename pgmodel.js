@@ -33,11 +33,11 @@ class PgModel{
         inlineFields[0] += ', updated_at';
         inlineFields[1] += ', localtimestamp';
         if(this.id)
-            query =  __dbpool.query('UPDATE '+this.constructor.tableName+' SET ('+inlineFields[0]+') = ('+inlineFields[1]+') WHERE id = '+this.id+' RETURNING *;'); 
+            query =  __dbpool.query('UPDATE '+this.constructor.tableName+' SET ('+inlineFields[0]+') = ('+inlineFields[1]+') WHERE id = '+this.id+' RETURNING *;', inlineFields[2]); 
         else{
             inlineFields[0] += ', created_at';
             inlineFields[1] += ', localtimestamp';
-            query = __dbpool.query('INSERT INTO '+this.constructor.tableName+' ('+inlineFields[0]+') VALUES('+inlineFields[1]+') RETURNING *;');
+            query = __dbpool.query('INSERT INTO '+this.constructor.tableName+' ('+inlineFields[0]+') VALUES('+inlineFields[1]+') RETURNING *;', inlineFields[2]);
         }
         return query
             .then(this.constructor.makeFromRow.bind(this.constructor))
@@ -51,24 +51,23 @@ class PgModel{
     inlineFields(){
         var result = [], 
             keys = '', 
-            values = '';
+            placeholders = '',
+            values = [],
+            count = 1;
         var safe_keys = this.constructor.safe_keys;
         for(var key in this){
             if((this[key]) && (this[key].constructor.name == 'Function' || this[key].constructor.name == 'AsyncFunction')) continue;
             if(safe_keys.has(key)) continue;
             keys += key+', ';
-            if(this[key] && (this[key].constructor.name == 'String'))
-            
-                values += '\''+this[key]+'\', ';
-            else if((this[key]) && (this[key].constructor.name == 'Object'))
-                values += '$$'+JSON.stringify(this[key])+'$$, ';
-            else
-                values += this[key]+', ';
+            placeholders += '$'+count+', ';
+            values.push(this[key]);
+            count++;
         }
         keys = keys.substring(0,(keys.length -2));
-        values = values.substring(0, (values.length-2));    
+        placeholders = placeholders.substring(0, (placeholders.length-2));    
         result[0] = keys;
-        result[1] = values;
+        result[1] = placeholders;
+        result[2] = values;
         return result; 
     }  
 }
